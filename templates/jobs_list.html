@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Список работ</h1>
+{% if current_user.is_authenticated %}
+<div>
+    <a href="create" class="btn btn-secondary">Добавить работу</a>
+</div>
+{% endif %}
+{% for job in jobs %}
+<div>
+    <h2>Задача № {{loop.index}}</h2>
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Название работы</th>
+            <th scope="col">фамилия и имя ответственного</th>
+            <th scope="col">Продолжительность в часах</th>
+            <th scope="col">Список id команды</th>
+            <th scope="col">Завершена</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>{{job.job}}</td>
+            <td>{{job.leader.surname}} {{job.leader.name}}</td>
+            <td>{{job.work_size}}</td>
+            <td>{{job.collaborators}}</td>
+            <td>{{job.is_finished}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+{% endblock %}
