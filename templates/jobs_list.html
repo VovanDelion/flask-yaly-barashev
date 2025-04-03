@@ -31,6 +31,11 @@
             <td>{{job.work_size}}</td>
             <td>{{job.collaborators}}</td>
             <td>{{job.is_finished}}</td>
+            <td>
+                {% for cat in job.categories %}
+                <span class="badge badge-secondary">{{ cat.name }}</span>
+                {% endfor %}
+            </td>
             {% if current_user.is_authenticated and (current_user.id == job.team_leader or current_user.id == 1) %}
             <td>
                 <a href="{{ url_for('edit_job', job_id=job.id) }}" class="btn btn-warning">Изменить</a>

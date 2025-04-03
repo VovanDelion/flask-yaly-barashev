@@ -2,11 +2,10 @@ from flask import redirect, url_for, flash, render_template, abort, request
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from data.db_session import create_session, global_init
 from data.users import User
-from data.jobs import Jobs
+from data.jobs import Jobs, Department, Category
 from forms.users import LoginForm, RegisterForm
 from forms.jobs import JobsCreateForm
 from forms.departments import DepartmentForm
-from data.jobs import Department
 
 
 app = Flask(__name__)
@@ -82,26 +81,24 @@ def logout():
     return redirect("/")
 
 
-@app.route('/create', methods=['GET', 'POST'])
+@app.route('/jobs/create', methods=['GET', 'POST'])
 @login_required
-def jobs_create():
+def create_job():
     form = JobsCreateForm()
-    msg = ""
+    form.categories.choices = [(c.id, c.name) for c in Category.query.all()]
+
     if form.validate_on_submit():
         job = Jobs()
-        job.job = form.name.data
-        job.team_leader = form.team_leader.data
-        job.work_size = form.work_size.data
-        job.collaborators = form.collaborators.data
-        job.is_finished = form.is_finished.data
-        sess = create_session()
-        sess.add(job)
-        sess.commit()
-        msg = "Успешно!"
-        return redirect("/jobs_list")
-    return render_template("jobs_create.html", title="Добавить работу",
-                           message=msg,
-                           form=form)
+        for cat_id in form.categories.data:
+            category = Category.query.get(cat_id)
+            job.categories.append(category)
+
+        db.session.add(job)
+        db.session.commit()
+        flash('Работа создана', 'success')
+        return redirect(url_for('jobs_list'))
+
+    return render_template('jobs_create.html', form=form)
 
 
 @app.route('/jobs/edit/<int:job_id>', methods=['GET', 'POST'])
