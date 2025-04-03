@@ -1,4 +1,4 @@
-from flask import *
+from flask import redirect, url_for, flash, render_template, abort, request
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from data.db_session import create_session, global_init
 from data.users import User
@@ -101,6 +101,58 @@ def jobs_create():
                            message=msg,
                            form=form)
 
+
+@app.route('/jobs/edit/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def edit_job(job_id):
+    job = Jobs.query.get_or_404(job_id)
+
+    if current_user.id != job.team_leader and current_user.id != 1:
+        abort(403)
+
+    form = JobsCreateForm()
+
+    if form.validate_on_submit():
+        job.job = form.name.data
+        job.team_leader = form.team_leader.data
+        job.work_size = form.work_size.data
+        job.collaborators = form.collaborators.data
+        job.is_finished = form.is_finished.data
+
+        db.session.commit()
+        flash('Работа успешно обновлена', 'success')
+        return redirect(url_for('jobs_list'))
+
+    if request.method == 'GET':
+        form.name.data = job.job
+        form.team_leader.data = job.team_leader
+        form.work_size.data = job.work_size
+        form.collaborators.data = job.collaborators
+        form.is_finished.data = job.is_finished
+
+    return render_template('jobs_create.html',
+                           title='Редактирование работы',
+                           form=form)
+
+
+@app.route('/jobs/delete/<int:job_id>', methods=['POST'])
+@login_required
+def delete_job(job_id):
+    job = Jobs.query.get_or_404(job_id)
+
+    if current_user.id != job.team_leader and current_user.id != 1:
+        flash('У вас нет прав для удаления этой работы', 'danger')
+        return redirect(url_for('jobs_list'))
+
+    try:
+        db.session.delete(job)
+        db.session.commit()
+        flash('Работа успешно удалена', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при удалении работы', 'danger')
+
+    return redirect(url_for('jobs_list'))
 
 global_init("db/database.sqlite")
 app.run('localhost', 8080, debug=True)
