@@ -5,6 +5,7 @@
 {% if current_user.is_authenticated %}
 <div>
     <a href="create" class="btn btn-secondary">Добавить работу</a>
+    <a href="{{ url_for('departments_list') }}" class="btn btn-info ml-2">Департаменты</a>
 </div>
 {% endif %}
 {% for job in jobs %}

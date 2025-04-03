@@ -5,6 +5,8 @@ from data.users import User
 from data.jobs import Jobs
 from forms.users import LoginForm, RegisterForm
 from forms.jobs import JobsCreateForm
+from forms.departments import DepartmentForm
+from data.jobs import Department
 
 
 app = Flask(__name__)
@@ -153,6 +155,69 @@ def delete_job(job_id):
         flash('Ошибка при удалении работы', 'danger')
 
     return redirect(url_for('jobs_list'))
+
+
+@app.route('/departments')
+def departments_list():
+    deps = db.session.query(Department).all()
+    return render_template('departments_list.html', departments=deps)
+
+
+@app.route('/departments/create', methods=['GET', 'POST'])
+@login_required
+def create_department():
+    form = DepartmentForm()
+    if form.validate_on_submit():
+        dep = Department(
+            title=form.title.data,
+            chief=form.chief.data,
+            members=form.members.data,
+            email=form.email.data
+        )
+        db.session.add(dep)
+        db.session.commit()
+        flash('Департамент создан', 'success')
+        return redirect(url_for('departments_list'))
+    return render_template('department_edit.html', form=form, title='Создание департамента')
+
+
+@app.route('/departments/edit/<int:dep_id>', methods=['GET', 'POST'])
+@login_required
+def edit_department(dep_id):
+    dep = Department.query.get_or_404(dep_id)
+    if current_user.id != dep.chief and current_user.id != 1:
+        abort(403)
+
+    form = DepartmentForm()
+    if form.validate_on_submit():
+        dep.title = form.title.data
+        dep.chief = form.chief.data
+        dep.members = form.members.data
+        dep.email = form.email.data
+        db.session.commit()
+        flash('Изменения сохранены', 'success')
+        return redirect(url_for('departments_list'))
+
+    if request.method == 'GET':
+        form.title.data = dep.title
+        form.chief.data = dep.chief
+        form.members.data = dep.members
+        form.email.data = dep.email
+
+    return render_template('department_edit.html', form=form, title='Редактирование департамента')
+
+
+@app.route('/departments/delete/<int:dep_id>', methods=['POST'])
+@login_required
+def delete_department(dep_id):
+    dep = Department.query.get_or_404(dep_id)
+    if current_user.id != dep.chief and current_user.id != 1:
+        abort(403)
+
+    db.session.delete(dep)
+    db.session.commit()
+    flash('Департамент удален', 'success')
+    return redirect(url_for('departments_list'))
 
 global_init("db/database.sqlite")
 app.run('localhost', 8080, debug=True)
