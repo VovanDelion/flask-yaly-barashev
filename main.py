@@ -6,10 +6,12 @@ from data.jobs import Jobs, Department, Category
 from forms.users import LoginForm, RegisterForm
 from forms.jobs import JobsCreateForm
 from forms.departments import DepartmentForm
+from api.jobs import blueprint as jobs_blueprint
 
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "my secret key"
+app.register_blueprint(jobs_blueprint)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
