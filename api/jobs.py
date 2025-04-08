@@ -52,7 +52,7 @@ def add_job():
 
     return flask.make_response(flask.jsonyfy({"ok": str(job.id)}), 201)
 
-@blueprint.route('/api/jobs/<int:job_id>', methods=['DELETE'])
+@blueprint.route('/api/jobs/delete/<int:job_id>', methods=['DELETE'])
 def delete_job(job_id):
     sess = db_session.create_session()
     job = sess.get(Jobs, job_id)
