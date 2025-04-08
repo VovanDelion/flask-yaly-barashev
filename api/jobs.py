@@ -21,7 +21,7 @@ def get_jobs():
                                  "is_finished")) for j in jobs]
     })
 
-@blueprint.route('/api/jobs.<int:job_id>')
+@blueprint.route('/api/jobs/<int:job_id>')
 def get_jobs_by_id(job_id):
     job = db_session.create_session().get(Jobs, job_id)
     if job:
@@ -48,6 +48,25 @@ def add_job():
 
     sess = db_session.create_session()
     sess.add(job)
+    sess.commit()
+
+    return flask.make_response(flask.jsonyfy({"ok": str(job.id)}), 201)
+
+
+@blueprint.route('/api/jobs/edit/<int:job_id>', methods=['PUT'])
+def add_job(job_id):
+    sess = db_session.create_session()
+    job = sess.get(Jobs, job_id)
+
+    if not job:
+        return flask.make_response(flask.jsonify({"error": "Not Found"}), 404)
+
+    job.job = flask.request.json["job"]
+    job.work_size = int(flask.request.json["work_size"])
+    job.collaborators = flask.request.json["collaborators"]
+    job.is_finished = flask.request.json["is_finished"]
+    job.team_leader = flask.request.json["team_leader"]
+
     sess.commit()
 
     return flask.make_response(flask.jsonyfy({"ok": str(job.id)}), 201)
