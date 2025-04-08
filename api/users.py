@@ -1,6 +1,10 @@
+from os import getenv
+
 import flask
 from flask import jsonify, make_response, request
 from werkzeug.security import generate_password_hash
+from flask import render_template
+import requests
 
 from data import db_session
 from data.users import User
@@ -123,3 +127,34 @@ def delete_user(user_id):
         'success': 'User deleted',
         'user_id': user_id
     }), 200)
+
+
+@blueprint.route('/users_show/<int:user_id>')
+def show_user_city(user_id):
+    session = db_session.create_session()
+    user = session.get(User, user_id)
+
+    if not user:
+        return flask.abort(404)
+
+    if not user.city_from:
+        return "У этого колониста не указан родной город", 400
+
+    geocoder_api_key = '8013b162-6b42-4997-9691-77b7074026e0'
+    geocoder_url = f"https://geocode-maps.yandex.ru/1.x/?apikey={geocoder_api_key}&format=json&geocode={user.city_from}"
+
+    try:
+        response = requests.get(geocoder_url)
+        data = response.json()
+        pos = data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']
+        longitude, latitude = pos.split()
+    except (requests.RequestException, KeyError, IndexError):
+        return "Не удалось получить координаты города", 500
+
+    return render_template(
+        'user_city.html',
+        user=user,
+        latitude=latitude,
+        longitude=longitude,
+        yandex_maps_api_key=getenv("map_api", "ключик надо)")
+    )
