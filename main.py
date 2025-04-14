@@ -1,5 +1,6 @@
-from flask import redirect, url_for, flash, render_template, abort, request
+from flask import redirect, url_for, flash, render_template, abort, request, Flask
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
+from flask_restful import reqparse, abort, Api, Resource
 from data.db_session import create_session, global_init
 from data.users import User
 from data.jobs import Jobs, Department, Category
@@ -10,6 +11,7 @@ from api.jobs import blueprint as jobs_blueprint
 
 
 app = Flask(__name__)
+api = Api(app)
 app.config["SECRET_KEY"] = "my secret key"
 app.register_blueprint(jobs_blueprint)
 login_manager = LoginManager()
@@ -217,6 +219,11 @@ def delete_department(dep_id):
     db.session.commit()
     flash('Департамент удален', 'success')
     return redirect(url_for('departments_list'))
+
+
+api.add_resource(user_resources.UserListResource, '/api/v2/users')
+
+api.add_resource(user_resources.UserResource, '/api/v2/users/<int:news_id>')
 
 global_init("db/database.sqlite")
 app.run('localhost', 8080, debug=True)
