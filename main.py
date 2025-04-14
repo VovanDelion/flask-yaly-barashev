@@ -9,6 +9,9 @@ from forms.jobs import JobsCreateForm
 from forms.departments import DepartmentForm
 from api.jobs import blueprint as jobs_blueprint
 
+from api.users_resource import UsersResource, UsersListResource
+from api.jobs_resource import JobsResource, JobsListResource
+
 
 app = Flask(__name__)
 api = Api(app)
@@ -221,9 +224,12 @@ def delete_department(dep_id):
     return redirect(url_for('departments_list'))
 
 
-api.add_resource(user_resources.UserListResource, '/api/v2/users')
+api.add_resource(UsersListResource, '/api/v2/users')
 
-api.add_resource(user_resources.UserResource, '/api/v2/users/<int:news_id>')
+api.add_resource(UsersResource, '/api/v2/users/<int:news_id>')
+
+api.add_resource(JobsListResource, '/api/v2/jobs')
+api.add_resource(JobsResource, '/api/v2/jobs/<int:job_id>')
 
 global_init("db/database.sqlite")
 app.run('localhost', 8080, debug=True)
